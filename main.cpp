@@ -2,6 +2,10 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <chrono>
+#include <thread>
+
+
 
 struct VecInt
 {
@@ -29,6 +33,8 @@ private:
     bool m_isAlive{true};
     std::vector<int> m_position{}; //small enough to keep on stack for now
     const VecInt& m_gridSize{};
+    int m_passTillMove{100};
+
 public:
     Snake(const VecInt& pos, const VecInt& gridSize)
         : m_gridSize{gridSize}
@@ -39,14 +45,21 @@ public:
     bool m_canMove{true};
     void askInput()
     {
-        if (IsKeyDown(KEY_UP)){m_heading = {0,1};} // ignore case that multiple keys pressed
+        if (IsKeyDown(KEY_UP)){m_heading = {0,-1};} // ignore case that multiple keys pressed, negative because raylib is annoying >:(
         if (IsKeyDown(KEY_LEFT)){m_heading = {-1,0};}
-        if (IsKeyDown(KEY_DOWN)){m_heading = {0,-1};}
+        if (IsKeyDown(KEY_DOWN)){m_heading = {0,1};}
         if (IsKeyDown(KEY_RIGHT)){m_heading = {1,0};}
     }
 
     void moveSnake(std::vector<State>& boardState)
     {
+        static int steps{0};
+        steps++;
+        if (steps < m_passTillMove)
+        {
+            return;
+        }
+        steps = 0;
         // update snake head
         int newPosition = m_position[m_position.size() - 1] + m_heading.x + m_heading.y * m_gridSize.x;
         bool hasEaten{false};
@@ -92,7 +105,7 @@ void renderScene(std::vector<State>& boardState, const VecInt& gridSize, int cel
         for (auto idx{0}; idx < boardState.size(); ++idx)
         {
             coord.x = idx % gridSize.x;
-            coord.y = idx / gridSize.y;
+            coord.y = idx / gridSize.x;
             pos.x = coord.x * cellSize;
             pos.y = coord.y * cellSize;
             pos.width = cellSize;
@@ -105,6 +118,7 @@ void renderScene(std::vector<State>& boardState, const VecInt& gridSize, int cel
             else if (boardState[idx] == State::snake)
             {
                 DrawRectangleRec(pos,BLUE);
+                int test{};
             }
             else if (boardState[idx] == State::food)
             {
@@ -131,7 +145,7 @@ int main()
     // Prelaunch initialisation and calculation
 
     // make board vars
-    const int boardSizex{20};
+    const int boardSizex{100};
     const VecInt targetScreenDimensions{1000,800};
     const int cellSize{targetScreenDimensions.x / boardSizex};
     const VecInt boardSize{boardSizex,targetScreenDimensions.y / cellSize};
@@ -163,13 +177,14 @@ int main()
         {
             snake.askInput();
             snake.moveSnake(boardState);
+            {
+                using namespace std::this_thread;
+                using namespace std::chrono_literals;
+                //sleep_for(0.5s);
+            }
         }
 
-        renderScene(boardState, boardSize, cellSize, camera);
+        renderScene(boardState, boardSize, cellSize, camera); // later add interpolation
     }
-    // snake move
-    // if snake eat food or poison change size, if snake hit wall, game over
-    // if gameover, show gameover screen
-    // allow reset, or quit
     return 0;
 }
