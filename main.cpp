@@ -59,9 +59,12 @@ public:
             break;
         case State::empty:
             boardState[m_position[0]] = State::empty;
-            for (auto idx{0}; idx < m_position.size() - 2; ++idx) // off by one?
+            if (m_position.size() != 1)
             {
-                m_position[idx] = m_position[idx + 1];
+                for (auto idx{0}; idx < m_position.size() - 2; ++idx) // off by one?
+                {
+                    m_position[idx] = m_position[idx + 1];
+                }
             }
             m_position[m_position.size() - 1] = newPosition;
             break;
