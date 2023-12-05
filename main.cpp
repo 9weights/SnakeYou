@@ -33,7 +33,7 @@ private:
     bool m_isAlive{true};
     std::vector<int> m_position{}; //small enough to keep on stack for now
     const VecInt& m_gridSize{};
-    int m_passTillMove{100};
+    int m_passTillMove{50};
 
 public:
     Snake(const VecInt& pos, const VecInt& gridSize)
@@ -62,7 +62,6 @@ public:
         steps = 0;
         // update snake head
         int newPosition = m_position[m_position.size() - 1] + m_heading.x + m_heading.y * m_gridSize.x;
-        bool hasEaten{false};
         // Check if other entities occupy space and handle
         switch (boardState[newPosition])
         {
@@ -74,7 +73,7 @@ public:
             boardState[m_position[0]] = State::empty;
             if (m_position.size() != 1)
             {
-                for (auto idx{0}; idx < m_position.size() - 2; ++idx) // off by one?
+                for (auto idx{0}; idx < m_position.size() - 1; ++idx) // off by one?
                 {
                     m_position[idx] = m_position[idx + 1];
                 }
@@ -82,6 +81,7 @@ public:
             m_position[m_position.size() - 1] = newPosition;
             break;
         case State::food:
+            boardState[m_position[0]] = State::empty;
             m_position.emplace_back(newPosition);
             break;
         case State::poison: // later make poison cut snake in half and turn into walls
@@ -183,7 +183,7 @@ int main()
                 //sleep_for(0.5s);
             }
         }
-
+        boardState[165] = State::food;
         renderScene(boardState, boardSize, cellSize, camera); // later add interpolation
     }
     return 0;
